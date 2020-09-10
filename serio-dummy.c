@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <malloc.h>
+//#include <malloc.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -88,6 +88,8 @@ void serial_purge_tx() {
 int serial_write(byte *str, int len) {
   #ifdef SERIAL_VERBOSE
   printf("WRITE: ");
+  if (!str)
+    return 0;
   printhexstring(str,len); 
   #endif
   /* determine mode */

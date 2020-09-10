@@ -20,7 +20,7 @@
 
 /* the debug master switch, enables all available debugging and verbosity
    routines.  or, undef this and set individual options below... */
-#undef DEBUGMASTER
+#define DEBUGMASTER
 
 /* enable some checks for retarded values being passed to things */
 #undef RETARDED

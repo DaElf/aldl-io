@@ -173,7 +173,7 @@ void *aldl_acq(void *aldl_in) {
       unlock_stats();
       pktfail = 1;
       #ifdef VERBLOSITY
-      printf("packet %i failed due to timeout...\n",npkt);
+      printf("%s:%d packet %i failed due to timeout...\n", __func__, __LINE__, npkt);
       #endif
 
     /* optional check for pcm address bit in the header, to see if we're

@@ -3,6 +3,10 @@
 
 #include "aldl-types.h"
 
+#define dprintf(...) \
+  if (1) \
+    fprintf(stderr, __VA_ARGS__)
+
 /************ SCOPE *********************************
   Include this file.  All useful functions are
   declared here.

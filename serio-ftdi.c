@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <malloc.h>
+//#include <malloc.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
@@ -62,9 +62,7 @@ void serial_close() {
 }
 
 int serial_init(char *port) {
-  #ifdef SERIAL_VERBOSE
-  printf("serial_init opening port @ %s with method ftdi\n",port);
-  #endif
+  dprintf("serial_init opening port @ %s with method ftdi\n",port);
 
   ftdistatus = 0;
   iofail = 0;
@@ -91,9 +89,7 @@ int serial_init(char *port) {
   ftdifatal(2,res);
   #endif
 
-  #ifdef SERIAL_VERBOSE
-  printf("init ftdi userland driver appears sucessful...\n");
-  #endif
+  dprintf("init ftdi userland driver appears sucessful...\n");
 
   /* set baud rate */
   ftdierror(3,ftdi_set_baudrate(ftdi,FTDI_BAUD));
@@ -107,37 +103,29 @@ int serial_init(char *port) {
 
 void serial_purge() {
   ftdierror_counter(88,ftdi_usb_purge_buffers(ftdi));
-  #ifdef SERIAL_VERBOSE
-  printf("SERIAL PURGE RX/TX\n");
-  #endif
+  dprintf("%s:%d RX/TX\n", __func__, __LINE__);
 }
 
 void serial_purge_rx() {
   ftdierror_counter(88,ftdi_usb_purge_rx_buffer(ftdi));
-  #ifdef SERIAL_VERBOSE
-  printf("SERIAL PURGE RX\n");
-  #endif
+  dprintf("%s:%d RX\n", __func__, __LINE__);
 }
 
 void serial_purge_tx() {
   ftdierror_counter(88,ftdi_usb_purge_tx_buffer(ftdi));
-  #ifdef SERIAL_VERBOSE
-  printf("SERIAL PURGE TX\n");
-  #endif
+  dprintf("%s:%d TX\n", __func__, __LINE__);
 }
 
 int serial_write(byte *str, int len) {
   #ifdef RETARDED
     /* check for 0 length or null string */
     if(str == NULL || len == 0) {
-      #ifdef SERIAL_VERBOSE
-        printf("non-fatal, attempted serial write of 0 len or null string\n");
-      #endif
+      dprintf("%s:%d non-fatal, attempted serial write of 0 len or null string\n", __func__, __LINE__);
       return 1;
     }
   #endif
   #ifdef SERIAL_SUPERVERBOSE
-  printf("WRITE: ");
+  printf("%s:%d->\t", __func__, __LINE__);
   printhexstring(str,len);
   #endif
 
@@ -146,24 +134,25 @@ int serial_write(byte *str, int len) {
 }
 
 int serial_read(byte *str, int len) {
+
+  int resp = 0; /* to store response from whatever read */
+
   #ifdef RETARDED
     /* check for null string or 0 length */
     if(str == NULL || len == 0) {
-      #ifdef SERIAL_VERBOSE
-        printf("non-fatal, attempted serial read to NULL buffer or 0 len\n");
-      #endif
+      dprintf("%s:%d non-fatal, attempted serial read to NULL buffer or 0 len\n", __func__, __LINE__);
       return 0;
     }
   #endif
-  int resp = 0; /* to store response from whatever read */
+
   resp = ftdi_read_data(ftdi,(unsigned char *)str,len);
   ftdierror_counter(22,resp);
   #ifdef SERIAL_SUPERVERBOSE
   if(resp > 0) {
-    printf("READ %i of %i bytes: ",resp,len);
+    printf("%s:%d %i of %i bytes: ", __func__, __LINE__, resp, len);
     printhexstring(str,resp);
   } else {
-    printf("EMPTY\n");
+    //printf("EMPTY\n");
   }
   #endif
 
@@ -193,9 +182,7 @@ inline int ftdierror_counter(int loc,int errno) {
     return 0;
   } else {
     iofail++;
-    #ifdef SERIAL_VERBOSE
-    fprintf(stderr,"FTDI DRIVER: %i, %s\n",errno,ftdi_get_error_string(ftdi));
-    #endif
+    dprintf("FTDI DRIVER: %i, %s\n",errno,ftdi_get_error_string(ftdi));
     if(iofail > FTDI_MAXFAIL) ftdi_recovery();
     return 1;
   }
@@ -204,9 +191,7 @@ inline int ftdierror_counter(int loc,int errno) {
 inline void ftdi_recovery() {
   #ifdef FTDI_ATTEMPT_RECOVERY
   ftdistatus=0;
-    #ifdef SERIAL_VERBOSE
-    fprintf(stderr,"FTDI DRIVER: Triggered recovery mode...\n");
-    #endif
+  dprintf("FTDI DRIVER: Triggered recovery mode...\n");
   serial_close();
   msleep(500);
   serial_init(serialstr);

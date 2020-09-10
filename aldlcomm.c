@@ -36,13 +36,15 @@ int aldl_timeout(int len); /* figure out a timeout period */
 
 int aldl_reconnect(aldl_commdef_t *c) {
   #ifdef ALDL_VERBOSE
-    printf("attempting to place ecm in diagnostic mode.\n");
+  printf("%s:%d attempting to place ecm in diagnostic mode.\n", __func__, __LINE__);
   #endif
   /* wait forever.  bail some other way if you want to stop waiting. */
   while(1) {
     /* send a 'return to normal mode' command first, but don't bother
        unless the ecm has idle traffic ... */
-    if(aldl_shutup(c) == 1) serial_write(c->returncommand,4);
+    if(aldl_shutup(c) == 1)
+      serial_write(c->returncommand,4);
+
     msleep(50);
     serial_purge();
     if(c->chatterwait == 1) {
@@ -64,9 +66,7 @@ int aldl_reconnect(aldl_commdef_t *c) {
 }
 
 int aldl_waitforchatter(aldl_commdef_t *c) {
-  #ifdef ALDL_VERBOSE
-    printf("waiting for idle chatter to confirm key is on..\n");
-  #endif
+  dprintf("waiting for idle chatter to confirm key is on..\n");
   #ifdef GIVEUPWAITING
   int giveupcount = 0;
   #endif
@@ -81,20 +81,21 @@ int aldl_waitforchatter(aldl_commdef_t *c) {
     if(giveupcount > GIVEUPWAITING) exit(0);
     #endif
   }
-  #ifdef ALDL_VERBOSE
-    printf("got idle chatter or something.\n");
-  #endif
+  dprintf("got idle chatter or something.\n");
   msleep(c->idledelay);
   return 1;
 }
 
 int aldl_request(byte *pkt, int len) {
+
+  int result = 0; 
+
   serial_purge();
   serial_write(pkt,len);
   #ifndef AGGRESSIVE
   msleep(aldl_timeout(len));
   #endif
-  int result = listen_bytes(pkt,len,len,aldl_timeout(len));
+  result = listen_bytes(pkt,len,len,aldl_timeout(len));
   return result;
 }
 
@@ -106,16 +107,20 @@ int aldl_timeout(int len) {
 }
 
 int aldl_shutup(aldl_commdef_t *c) {
-  if(c->shutuprepeat == 0) return 1; /* no shutup necessary */
   int x;
+  if(c->shutuprepeat == 0)
+          return 1; /* no shutup necessary */
+
   for(x=1;x<=c->shutuprepeat;x++) {
-    if(aldl_request(c->shutupcommand,4) == 1) return 1;
+    if(aldl_request(c->shutupcommand,4) == 1)
+            return 1;
   }
   return 0;
 }
 
 byte *aldl_get_packet(aldl_packetdef_t *p) {
-  if(aldl_request(p->command, 5) == 0) return NULL;
+  if(aldl_request(p->command, 5) == 0)
+          return NULL;
   /* get actual data */
   if(read_bytes(p->data, p->length, aldl_timeout(p->length)) == 0) {
     /* failed to get data */
@@ -162,9 +167,8 @@ inline int skip_bytes(int bytes, int timeout) {
   }
   /* read into commbuf and then forget about it */
   int bytes_read = read_bytes(commbuf,bytes,timeout);
-  #ifdef SERIAL_VERBOSE
-  printf("SKIP_BYTES: Discarded %i bytes.\n",bytes_read);
-  #endif
+  dprintf("SKIP_BYTES: Discarded %i bytes.\n",bytes_read);
+  printhexstring(commbuf, bytes);
   return bytes_read;
 }
 
@@ -181,10 +185,9 @@ int listen_bytes(byte *str, int len, int max, int timeout) {
   int chars_read = 0; /* total chars read into buffer */
   int chars_in = 0; /* chars added to buffer */
   timespec_t timestamp = get_time(); /* timestamp beginning of op */
-  #ifdef SERIAL_VERBOSE
-  printf("LISTEN: ");
+  dprintf("LISTEN: ");
   printhexstring(str,len);
-  #endif
+
   while(chars_read < max) {
     chars_in = serial_read(commbuf + chars_read,max - chars_read);
     if(chars_in > 0) {
@@ -225,6 +228,8 @@ byte *generate_request(byte mode, byte message, aldl_commdef_t *comm) {
   command[2] = mode;
   command[3] = message;
   command[4] = checksum_generate(command,4); /* 4=msglen */
+  printf("%s:%d ", __func__, __LINE__);
+  printhexstring(command,5);
   return command;
 }
 

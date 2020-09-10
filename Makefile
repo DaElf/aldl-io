@@ -1,5 +1,5 @@
 # compiler flags
-CFLAGS= -O2 -Wall
+CFLAGS= -O2 -Wall -g3
 OBJS= acquire.o error.o loadconfig.o useful.o aldlcomm.o aldldata.o consoleif.o remote.o datalogger.o mode4.o
 LIBS= -lpthread -lrt -lncurses
 
@@ -46,7 +46,7 @@ install: aldl-ftdi aldl-dummy
 	@echo Install complete, see configs in $(CONFIGDIR) before running
 
 aldl-ftdi: main.c serio-ftdi.o config.h aldl-io.h aldl-types.h $(OBJS)
-	gcc $(CFLAGS) $(LIBS) -lftdi main.c -o aldl-ftdi $(OBJS) serio-ftdi.o
+	gcc $(CFLAGS) $(LIBS) -lftdi1 main.c -o aldl-ftdi $(OBJS) serio-ftdi.o
 	@echo
 	@echo '***************************************************'
 	@echo ' You must blacklist or rmmod the ftdi_sio driver!!'
